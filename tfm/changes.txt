@@ -1,0 +1,39 @@
+Kamal,
+
+here are a few things you should try with your new equipment:
+
+1) Build an ebridge image using the instructions on the following page:
+https://zoo.silverspringnet.com/display/FwEng/Building+Images
+... using the following variables for the ebridge:
+    export BSP=slic
+    export ARCH=arm
+    export PROJECT=nic
+    export DA_RADIO=1
+    export TM_SNMP_VERSION=2
+    export MK_ENABLE_LUA=1
+
+2) build net_mgr (under tools/net_mgr in your FW source tree)
+
+3) Connect the ebridge to your laptop using the ethernet cable, and try to use net_mgr to get its node_age:
+
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 node_age
+
+xxxx:xxxx:xxxx:xxxx is based on the MAC address of the ebridge (found under the ebridge). So if the MAC address is 00:13:50:ff:fe:04:8c:2b, then the IP address is fe80::0213:50ff:fe04:8c2b%en1
+
+4) Use the commands on this page to upload the image to the bridge:
+https://zoo.silverspringnet.com/display/FwEng/OTA+Firmware+Upgrade
+
+5) Try the following commands on the bridge:
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 nodeq 0
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 nodeq 1
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 devinfo
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 sysinfo
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 trnet show device
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 trnet show route
+net_mgr -d fe80:xxxx:xxxx:xxxx:xxxx%en1 stat nic_traffic
+
+These give you information about the nodes the ebridge can see, and what IP addresses and routes it has.
+
+6) Plug in the FSU and use the commands on this page to try to talk to the bridge using the FSU:
+https://zoo.silverspringnet.com/display/NetLab/NilHowtoGwncc
+
