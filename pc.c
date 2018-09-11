@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2018 Itron Inc.
- * All rights reserved.
- */
-
 #include <tfm.h>
 #include <stdint.h>
 #include "pc.h"
