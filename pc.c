@@ -31,6 +31,23 @@ fp_int param_p, param_a, param_b;
 #define ERR_OSTR_TOO_SMALL          201
 #define EC_POINT_PRIME256v1_X_SIZE  32
 
+/*
+void print_bn(char *msg, fp_int *bn)
+{
+    int l,i;
+    uint8_t print_string[64];
+
+    l = fp_unsigned_bin_size(bn);
+    fp_to_unsigned_bin(bn,print_string);
+
+    printf("%s :", msg);
+    printf("[%d octets] :", l);
+    for (i = 0; i < l; i++)
+        printf("%02x ", print_string[i]);
+    printf("\n");
+}
+
+*/
 //globals
  static fp_int three, u, y, z;
 
@@ -201,14 +218,14 @@ bool SSL_ItronEnhanced_ExpandKey(
     else {
         fp_sub(&param_p, &beta, &ypi);
     }
-
+    print_bn("bigint string is", &ypi);
     uint16_t ostr_len = 32;
     ret = bigint_to_octetstring(&ypi, yp, &ostr_len);
     if (ret != 0 ) {
         printf("Expandkey error - bigint_to_ocetstring err %d \n", ret);
         return FALSE;
     }
-
+    
     /* prepare output */
     outptr[0] = 0x04;
     memcpy(outptr + 1, xp, EC_POINT_PRIME256v1_X_SIZE);

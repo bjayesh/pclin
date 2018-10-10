@@ -46,6 +46,10 @@ char *ecpt_strings[] = {
     "04"
     "4f4f9603e10f904c60f6f9bbac6c1c9c075820325a8dc712738cb32eade87b9b"
     "5363c47458ab33277be77af342c8c5ad97f1d1e63832887ea1a365435b61b212",
+    
+    "04"
+    "AFAFD2FBA2F7B39BB54F0DA22AB86AB9E3E08449B20D9D47F4471C2DCDE96228"
+    "0416AB1326170C6698515957D00810BFDF45240D1469D1CB89496D5D62A434E3",
 
 };
 
@@ -123,12 +127,16 @@ int main()
         ostr_len = EC_P256_PUBKEY_SIZE;
         ecpt_str_to_ostr(ecpt_strings[i], ecpt_uc_1, &ostr_len);
 
+        print_ostr("Regular string is :", ecpt_uc_1, ostr_len);
+
         // call compress
         ret = SSL_ItronEnhanced_CompressKey(ecpt_uc_1, ecpt_c); 
         if (ret == FALSE) {
             printf("Test -- %02d Error point compress \n", i);
             exit(1);
         }
+
+       print_ostr("compressed string is :", ecpt_c, strlen(ecpt_c));
 
         // call uncompress
         ret = SSL_ItronEnhanced_ExpandKey(ecpt_c, ecpt_uc_2); 
@@ -137,6 +145,8 @@ int main()
             exit(1);
         }
 
+        print_ostr("Uncompressed string is :", ecpt_uc_2, ostr_len);
+        
         //check results
         if (memcmp(ecpt_uc_2, ecpt_uc_1, EC_P256_PUBKEY_SIZE) == 0){
             printf("Test %02d -- PASS.\n", i+1);
@@ -144,6 +154,7 @@ int main()
         else {
             printf("Test %02d -- FAIL.\n", i+1);
         }
+    printf("\n");   
     }
     return 0;
 }
