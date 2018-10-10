@@ -1,4 +1,4 @@
-#include <tfm.h>
+#include <tommath.h>
 #include <stdint.h>
 #include "pc.h"
 
@@ -60,13 +60,13 @@ uint8_t ecpt_c[EC_P256_PUBKEY_SIZE];
 #define ERR_BUF_LENGTH 201
 #define ERR_NO_PAD     202
 
-void print_bn(char *msg, fp_int *bn)
+void print_bn(char *msg, mp_int *bn)
 {
     int l,i;
     uint8_t print_string[64];
  
-    l = fp_unsigned_bin_size(bn);
-    fp_to_unsigned_bin(bn,print_string);
+    l = mp_unsigned_bin_size(bn);
+    mp_to_unsigned_bin(bn,print_string);
 
     printf("%s :", msg); 
     printf("[%d octets] :", l);

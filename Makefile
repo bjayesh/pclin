@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS+=-Itfm -Wall -g
+CFLAGS+=-Iltm -Wall -g
 
 OBJS=pc.o pc_test.o
 
@@ -12,8 +12,11 @@ OBJS=pc.o pc_test.o
 #.pc_test.o: pc_test.c
 #	$(CC) -c $(CFLAGS) $+
 
-pc_test: $(OBJS) buildtfm
-	$(CC) -o $@ $(OBJS) -Ltfm -ltfm
+#pc_test: $(OBJS) buildtfm
+#	$(CC) -o $@ $(OBJS) -Ltfm -ltfm
+
+pc_test: $(OBJS) buildltm
+	$(CC) -o $@ $(OBJS) -Lltm -lltm
 
 buildltm:
 	$(MAKE) -C ltm 2>/dev/null 
