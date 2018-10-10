@@ -31,23 +31,8 @@ fp_int param_p, param_a, param_b;
 #define ERR_OSTR_TOO_SMALL          201
 #define EC_POINT_PRIME256v1_X_SIZE  32
 
-/*
-void print_bn(char *msg, fp_int *bn)
-{
-    int l,i;
-    uint8_t print_string[64];
+extern void print_bn(char *msg, fp_int *bn);
 
-    l = fp_unsigned_bin_size(bn);
-    fp_to_unsigned_bin(bn,print_string);
-
-    printf("%s :", msg);
-    printf("[%d octets] :", l);
-    for (i = 0; i < l; i++)
-        printf("%02x ", print_string[i]);
-    printf("\n");
-}
-
-*/
 //globals
 static __attribute__((aligned(4))) fp_int three, alpha, beta, u, y, z;
 static __attribute__((aligned(4))) fp_int xpi,tmp1,ypi;
