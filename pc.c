@@ -32,7 +32,8 @@ fp_int param_p, param_a, param_b;
 #define EC_POINT_PRIME256v1_X_SIZE  32
 
 //globals
- static fp_int three, u, y, z;
+static __attribute__((aligned(4))) fp_int three, alpha, beta, u, y, z;
+static __attribute__((aligned(4))) fp_int xpi,tmp1,ypi;
 
 /***************************************************************************//**
   \details: b = sqrt(g) mod p
@@ -132,7 +133,6 @@ bool SSL_ItronEnhanced_ExpandKey(
     int ret;
     uint8_t pc,zp;
     uint8_t *xp , yp[EC_POINT_PRIME256v1_X_SIZE];
-    fp_int xpi, three, alpha, beta, tmp1,ypi;
 
     pc = inptr[0];
     if (pc != 0x02 && pc != 0x03) return FALSE;
