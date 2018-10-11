@@ -241,10 +241,9 @@ bool SSL_ItronEnhanced_CompressKey(
 {
     /* ANSI X9.62-2005 A5.7 */
 
-    mp_init(&ypi);
     uint8_t pc,*yp;
-    mp_int ypi;
-
+    mp_init(&ypi);
+    
     pc = pubKey[0];
     if (pc != 0x04) return FALSE;
 
