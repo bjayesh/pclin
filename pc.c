@@ -136,7 +136,10 @@ bool SSL_ItronEnhanced_ExpandKey(
     int ret;
     uint8_t pc,zp;
     uint8_t *xp , yp[EC_POINT_PRIME256v1_X_SIZE];
-
+    
+    mp_init_multi(&param_p, &param_a, &param_b, &three, 
+    &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
+    
     pc = inptr[0];
     if (pc != 0x02 && pc != 0x03) return FALSE;
 
@@ -218,7 +221,8 @@ bool SSL_ItronEnhanced_ExpandKey(
     memcpy(outptr + 1 + EC_POINT_PRIME256v1_X_SIZE, yp, EC_POINT_PRIME256v1_X_SIZE);
 
 
-    mp_clear_multi(&param_p, &param_a, &param_b, &three, &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
+    mp_clear_multi(&param_p, &param_a, &param_b, &three,
+    &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
     return TRUE;
 }
 
@@ -237,7 +241,7 @@ bool SSL_ItronEnhanced_CompressKey(
 {
     /* ANSI X9.62-2005 A5.7 */
 
-    mp_init_multi(&param_p, &param_a, &param_b, &three, &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
+    mp_init(&ypi);
     uint8_t pc,*yp;
     mp_int ypi;
 
@@ -258,6 +262,7 @@ bool SSL_ItronEnhanced_CompressKey(
     /* prepare output */
     compressedKey[0] = pc;
     memcpy(compressedKey + 1, pubKey + 1,EC_POINT_PRIME256v1_X_SIZE);
-
+    
+    mp_clear(&ypi);
     return TRUE;
 }
