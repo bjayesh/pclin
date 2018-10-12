@@ -5,6 +5,7 @@
 #define TRUE  1
 #define FALSE 0
 #define EC_P256_PUBKEY_SIZE  65
+#define COMPRESSKEY_SIZE 33
 
 char *ecpt_strings[] = {
     "04"
@@ -27,29 +28,23 @@ char *ecpt_strings[] = {
     "2afa1ff6df9850319e42ac4768f0d3f177299c7f409b9103c1e08a459fdeea56"
     "e4e45af1d153c854d7fdf51f31cbd94c92c9faf46e5abca68d51fd99a6b5f9ba",
 
-    "04"
-    "e26960390c5f860fb3731e82c7d8ef16e8dccbd6a583cdafa518c7c101c82ead"
-    "dca9dfd4cc07f46647159b940e4f03e89869b1b1eb5e6133011d9193dce52019",
+    "03"
+    "e26960390c5f860fb3731e82c7d8ef16e8dccbd6a583cdafa518c7c101c82ead",
 
-    "04"
-    "efae29804bff011dde29cde3f0c0106813a3413e7dce3864b9b755c32c419090"
-    "6b68c09ccc4acb2210e83b0214e8c696eaa4ac003c9e638dd7f4ce207bd52311",
+    "03"
+    "efae29804bff011dde29cde3f0c0106813a3413e7dce3864b9b755c32c419090",
 
-    "04"
-    "e05788653983d48a38ccc3f701cf239b0f8b5b85ac05d2afb5172269678b7e95"
-    "d2c37c78df75cf32d5ba8ff0d91a4e777c14e3494729e771eb716c27681093f8",
+    "02"
+    "e05788653983d48a38ccc3f701cf239b0f8b5b85ac05d2afb5172269678b7e95",
 
-    "04"
-    "1445a8da1d8103d194093b93c4a3458382c7643923c81ec591cde9031beb65e9"
-    "c86363c896ec7114a479afe7413d379dfcee2ebc18cd7f06fe696c358fa00a0e",
+    "02"
+    "1445a8da1d8103d194093b93c4a3458382c7643923c81ec591cde9031beb65e9",
 
-    "04"
-    "4f4f9603e10f904c60f6f9bbac6c1c9c075820325a8dc712738cb32eade87b9b"
-    "5363c47458ab33277be77af342c8c5ad97f1d1e63832887ea1a365435b61b212",
+    "02"
+    "4f4f9603e10f904c60f6f9bbac6c1c9c075820325a8dc712738cb32eade87b9b",
     
-    "04"
-    "AFAFD2FBA2F7B39BB54F0DA22AB86AB9E3E08449B20D9D47F4471C2DCDE96228"
-    "0416AB1326170C6698515957D00810BFDF45240D1469D1CB89496D5D62A434E3",
+    "02"
+    "2afa1ff6df9850319e42ac4768f0d3f177299c7f409b9103c1e08a459fdeea56",
 
 };
 
@@ -94,7 +89,7 @@ int ecpt_str_to_ostr(char *str, uint8_t *ostr,uint16_t *ostr_len)
 
     cursor = 0;
     *ostr_len = slen/2;
-
+    
     for (i = 0; i < *ostr_len; i++){
         ostr[i] = get_digit(str[cursor])*16 + get_digit(str[cursor+1]);
         cursor+=2;
@@ -123,36 +118,33 @@ int main()
     printf("EC point compress/uncompress test\n");
     for (i = 0; i < no_of_points; i++) {
 
-        //convert string to ostring
-        ostr_len = EC_P256_PUBKEY_SIZE;
-        ecpt_str_to_ostr(ecpt_strings[i], ecpt_uc_1, &ostr_len);
+        if((ecpt_strings[i][1]) == '2' || (ecpt_strings[i][1]) == '3' )    
+        {
+            ostr_len = COMPRESSKEY_SIZE;
+            //convert string to ostring
+            ecpt_str_to_ostr(ecpt_strings[i], ecpt_c, &ostr_len);
 
-        print_ostr("Regular string is :", ecpt_uc_1, ostr_len);
-
-        // call compress
-        ret = SSL_ItronEnhanced_CompressKey(ecpt_uc_1, ecpt_c); 
-        if (ret == FALSE) {
-            printf("Test -- %02d Error point compress \n", i);
-            exit(1);
-        }
-
-       print_ostr("compressed string is :", ecpt_c, strlen(ecpt_c));
-
-        // call uncompress
-        ret = SSL_ItronEnhanced_ExpandKey(ecpt_c, ecpt_uc_2); 
-        if (ret == FALSE) {
-            printf("Test -- %02d Error point expand \n", i);
-            exit(1);
-        }
-
-        print_ostr("Uncompressed string is :", ecpt_uc_2, ostr_len);
-        
-        //check results
-        if (memcmp(ecpt_uc_2, ecpt_uc_1, EC_P256_PUBKEY_SIZE) == 0){
-            printf("Test %02d -- PASS.\n", i+1);
+            print_ostr("Compressed string is :", ecpt_c, ostr_len);
+            // call uncompress
+            ret = SSL_ItronEnhanced_ExpandKey(ecpt_c, ecpt_uc_2); 
+            if (ret == FALSE) {
+                printf("Test -- %02d Error point expand \n", i);
+                exit(1);
+            }
+            print_ostr("Uncompressed string is :", ecpt_uc_2, strlen(ecpt_uc_2));
         }
         else {
-            printf("Test %02d -- FAIL.\n", i+1);
+            ostr_len = EC_P256_PUBKEY_SIZE;
+            ecpt_str_to_ostr(ecpt_strings[i], ecpt_uc_1, &ostr_len);
+            
+            print_ostr("Uncompressed string is :", ecpt_uc_1, ostr_len);
+            // call compress
+            ret = SSL_ItronEnhanced_CompressKey(ecpt_uc_1, ecpt_c); 
+            if (ret == FALSE) {
+                printf("Test -- %02d Error point compress \n", i);
+                exit(1);
+            }
+            print_ostr("compressed string is :", ecpt_c, strlen(ecpt_c));
         }
     printf("\n");   
     }
