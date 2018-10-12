@@ -1,4 +1,4 @@
-#include <tfm.h>
+#include <tommath.h>
 #include <stdint.h>
 #include "pc.h"
  
@@ -17,7 +17,7 @@ char *prime256_a_str =
             "FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC";
 char *prime256_b_str = 
             "5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B";
-fp_int param_p, param_a, param_b;
+mp_int param_p, param_a, param_b;
 
 #define IN
 #define OUT
@@ -31,25 +31,26 @@ fp_int param_p, param_a, param_b;
 #define ERR_OSTR_TOO_SMALL          201
 #define EC_POINT_PRIME256v1_X_SIZE  32
 
-extern void print_bn(char *msg, fp_int *bn);
+extern void print_bn(char *msg, mp_int *bn);
 
 //globals
-static __attribute__((aligned(4))) fp_int three, alpha, beta, u, y, z;
-static __attribute__((aligned(4))) fp_int xpi,tmp1,ypi;
+static __attribute__((aligned(4))) mp_int three, alpha, beta, u, y, z;
+static __attribute__((aligned(4))) mp_int xpi,tmp1,ypi;
+
 
 /***************************************************************************//**
   \details: b = sqrt(g) mod p
  
   \return   int
  
-  \retval   FP_OKAY  - success
+  \retval   MP_OKAY  - success
   \retval   ERR_NO_SQRT - no square root exists for g
 *******************************************************************************/
 static int 
 sqrt_mod_p(
-    fp_int *g, 
-    fp_int *p, 
-    fp_int *b
+    mp_int *g, 
+    mp_int *p, 
+    mp_int *b
 ) 
 {
     /* ANSI X9.62-2005 l1.4, page 85 Alg 1 */
@@ -57,36 +58,36 @@ sqrt_mod_p(
 
     int ret;
 
-    if (fp_iszero(g) == FP_YES){
-        fp_zero(b);
-        return FP_OKAY;
+    if (mp_cmp_d(g, 0) == MP_EQ){
+        mp_set(b, 0);
+        return MP_OKAY;
     }
 
     /* u = (p -3)/4 */
-    fp_set(&three, 3); 
-    fp_sub(p, &three,&u);
-    fp_div_2(&u, &u);
-    fp_div_2(&u, &u);
+    mp_set(&three, 3); 
+    mp_sub(p, &three,&u);
+    mp_div_2(&u, &u);
+    mp_div_2(&u, &u);
 
     /* y = g^(u+1) mod p */
-    fp_add_d(&u,1,&u);
-    ret = fp_exptmod(g,&u,p,&y);
-    if (ret != FP_OKAY) {
-        printf("fp_exptmod fail %d\n", ret);
+    mp_add_d(&u,1,&u);
+    ret = mp_exptmod(g,&u,p,&y);
+    if (ret != MP_OKAY) {
+        printf("mp_exptmod fail %d\n", ret);
         return ret;
     }
 
     /* z = y^2 mod p */
-    ret = fp_sqrmod(&y, p, &z);
-    if (ret != FP_OKAY) {
-        printf("fp_sqrmod fail %d\n", ret);
+    ret = mp_sqrmod(&y, p, &z);
+    if (ret != MP_OKAY) {
+        printf("mp_sqrmod fail %d\n", ret);
         return ret;
     } 
 
-    ret = fp_cmp(g, &z);
-    if (ret == FP_EQ){
-        ret = FP_OKAY;
-        fp_copy(&y,b); /* b = y */
+    ret = mp_cmp(g, &z);
+    if (ret == MP_EQ){
+        ret = MP_OKAY;
+        mp_copy(&y,b); /* b = y */
     }   
     else
         ret = ERR_NO_SQRT;
@@ -104,15 +105,15 @@ sqrt_mod_p(
 *******************************************************************************/
 static int
 bigint_to_octetstring(
-    IN fp_int *bi, 
+    IN mp_int *bi, 
     OUT uint8_t *ostr, 
     INOUT uint16_t *ostr_len
 )
 {
-    int len = fp_unsigned_bin_size(bi);
+    int len = mp_unsigned_bin_size(bi);
 
     if (len > *ostr_len) return ERR_OSTR_TOO_SMALL;
-    fp_to_unsigned_bin(bi, ostr);
+    mp_to_unsigned_bin(bi, ostr);
     *ostr_len = len;
 
     return 0;
@@ -135,28 +136,31 @@ bool SSL_ItronEnhanced_ExpandKey(
     int ret;
     uint8_t pc,zp;
     uint8_t *xp , yp[EC_POINT_PRIME256v1_X_SIZE];
-
+    
+    mp_init_multi(&param_p, &param_a, &param_b, &three, 
+    &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
+    
     pc = inptr[0];
     if (pc != 0x02 && pc != 0x03) return FALSE;
 
     //XPi = octetstring_to_bigint(XP);
     xp = inptr + 1;
-    fp_read_unsigned_bin(&xpi,xp, EC_POINT_PRIME256v1_X_SIZE);
+    mp_read_unsigned_bin(&xpi,xp, EC_POINT_PRIME256v1_X_SIZE);
 
     /* prepare p, a and b for supported curve */
-    ret = fp_read_radix(&param_p, prime256_p_str, 16);
-    if (ret != FP_OKAY) {
-        printf("Expandkey error - fp_read_radix param_p\n");
+    ret = mp_read_radix(&param_p, prime256_p_str, 16);
+    if (ret != MP_OKAY) {
+        printf("Expandkey error - mp_read_radix param_p\n");
         return FALSE;
     }
-    ret = fp_read_radix(&param_a, prime256_a_str, 16);
-    if (ret != FP_OKAY) {
-        printf("Expandkey error - fp_read_radix param_a\n");
+    ret = mp_read_radix(&param_a, prime256_a_str, 16);
+    if (ret != MP_OKAY) {
+        printf("Expandkey error - mp_read_radix param_a\n");
         return FALSE;
     }
-    ret = fp_read_radix(&param_b, prime256_b_str, 16);
-    if (ret != FP_OKAY) {
-        printf("Expandkey error - fp_read_radix param_b\n");
+    ret = mp_read_radix(&param_b, prime256_b_str, 16);
+    if (ret != MP_OKAY) {
+        printf("Expandkey error - mp_read_radix param_b\n");
         return FALSE;
     }
 
@@ -167,41 +171,41 @@ bool SSL_ItronEnhanced_ExpandKey(
 
     /* derive YPi */
     /* alpha = (XPi*XPi*XPi + a*XPi + b) mod  p; */
-    fp_set(&three, 3); 
-    ret = fp_exptmod(&xpi, &three, &param_p, &alpha);
-    if (ret != FP_OKAY){
-        printf("Expandkey error - fp_exptmod\n");
+    mp_set(&three, 3); 
+    ret = mp_exptmod(&xpi, &three, &param_p, &alpha);
+    if (ret != MP_OKAY){
+        printf("Expandkey error - mp_exptmod\n");
         return FALSE;
     }
     /* a*XPi */
-    ret = fp_mulmod(&param_a, &xpi, &param_p, &tmp1);
-    if (ret != FP_OKAY){
-        printf("Expandkey error - fp_mulmod\n");
+    ret = mp_mulmod(&param_a, &xpi, &param_p, &tmp1);
+    if (ret != MP_OKAY){
+        printf("Expandkey error - mp_mulmod\n");
         return FALSE;
     }
-    ret = fp_addmod(&alpha, &tmp1, &param_p, &alpha);
-    if (ret != FP_OKAY){
-        printf("Expandkey error - fp_addmod\n");
+    ret = mp_addmod(&alpha, &tmp1, &param_p, &alpha);
+    if (ret != MP_OKAY){
+        printf("Expandkey error - mp_addmod\n");
         return FALSE;
     }
-    ret = fp_addmod(&alpha, &param_b, &param_p, &alpha);
-    if (ret != FP_OKAY){
-        printf("Expandkey error - fp_addmod\n");
+    ret = mp_addmod(&alpha, &param_b, &param_p, &alpha);
+    if (ret != MP_OKAY){
+        printf("Expandkey error - mp_addmod\n");
         return FALSE;
     }
 
     /* beta = sqrt_mod_p(alpha) */
     ret = sqrt_mod_p(&alpha, &param_p, &beta);
-    if (ret != FP_OKAY) {
+    if (ret != MP_OKAY) {
         printf("Expandkey error - sqrt_mod_P err %d \n", ret);
         return FALSE;
     } 
     /* if (LSBit(beta) == Zp) */
     if ( (beta.dp[0] & 1) == zp ){
-        fp_copy(&beta,&ypi);
+        mp_copy(&beta,&ypi);
     }
     else {
-        fp_sub(&param_p, &beta, &ypi);
+        mp_sub(&param_p, &beta, &ypi);
     }
     print_bn("bigint string is", &ypi);
     uint16_t ostr_len = 32;
@@ -216,6 +220,9 @@ bool SSL_ItronEnhanced_ExpandKey(
     memcpy(outptr + 1, xp, EC_POINT_PRIME256v1_X_SIZE);
     memcpy(outptr + 1 + EC_POINT_PRIME256v1_X_SIZE, yp, EC_POINT_PRIME256v1_X_SIZE);
 
+
+    mp_clear_multi(&param_p, &param_a, &param_b, &three,
+    &alpha, &beta, &u, &y, &z, &xpi, &tmp1, &ypi, NULL);
     return TRUE;
 }
 
@@ -235,18 +242,18 @@ bool SSL_ItronEnhanced_CompressKey(
     /* ANSI X9.62-2005 A5.7 */
 
     uint8_t pc,*yp;
-    fp_int ypi;
-
+    mp_init(&ypi);
+    
     pc = pubKey[0];
     if (pc != 0x04) return FALSE;
 
     /* covert yp to bignum ypi */
     yp = pubKey + EC_POINT_PRIME256v1_X_SIZE + 1;
-    fp_read_unsigned_bin(&ypi,yp, EC_POINT_PRIME256v1_X_SIZE);
+    mp_read_unsigned_bin(&ypi,yp, EC_POINT_PRIME256v1_X_SIZE);
 
     /* derive PC of compressed point */
-    fp_mod_2d(&ypi, 1, &ypi);
-    if (fp_cmp_d(&ypi,1) == FP_EQ)
+    mp_mod_2d(&ypi, 1, &ypi);
+    if (mp_cmp_d(&ypi,1) == MP_EQ)
         pc = 0x03;
     else
         pc = 0x02;
@@ -254,6 +261,7 @@ bool SSL_ItronEnhanced_CompressKey(
     /* prepare output */
     compressedKey[0] = pc;
     memcpy(compressedKey + 1, pubKey + 1,EC_POINT_PRIME256v1_X_SIZE);
-
+    
+    mp_clear(&ypi);
     return TRUE;
 }
