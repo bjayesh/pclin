@@ -58,8 +58,8 @@ sqrt_mod_p(
 
     int ret;
 
-    if (mp_cmp_d(&g, 0) == MP_EQ){
-        mp_set(&b, 0);
+    if (mp_cmp_d(g, 0) == MP_EQ){
+        mp_set(b, 0);
         return MP_OKAY;
     }
 

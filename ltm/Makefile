@@ -1,4 +1,4 @@
-CFLAGS += -Wall -W -Wshadow -I. 
+CFLAGS += -Wall -W -Wshadow -I./ -O3 -funroll-loops -fomit-frame-pointer
 
 all:libltm.a
 
